@@ -11,8 +11,9 @@ With a Powered by <herc logo> on the bottom small
 
 
 How To Use:
+* Must have exp, check your version with exp --version
 * Git clone repo
-* Navigate to root directory
+* Navigate to root directory & npm install
 * Start Genymotion Virtual Device
 * Start app with exp start and open a sperate terminal and use exp android
 * Create a simple text file and drop it into your Genymotion device
