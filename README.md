@@ -3,10 +3,10 @@
 Goals:
 
 Simple poc that shows this functionality 
-> user uploads document 
-> user gets shareable qr code to the path of document
-> shared qr code can download the document
-The lockton logo found here should be on the top https://lockton.com/ 
+* user uploads document 
+* user gets shareable qr code to the path of document
+* shared qr code can download the document
+* The lockton logo found here should be on the top https://lockton.com/ 
 With a Powered by <herc logo> on the bottom small
 
 
