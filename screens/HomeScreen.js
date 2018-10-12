@@ -16,6 +16,8 @@ import { MonoText } from '../components/StyledText';
 
 import firebase from 'firebase';
 import Firebase from '../constants/Firebase';
+import locktonLogo from '../assets/images/locktonLogo.png';
+import hercLogo from '../assets/images/hercLogo.png';
 
 // service firebase.storage {
 //   match /b/{bucket}/o {
@@ -52,18 +54,18 @@ export default class HomeScreen extends React.Component {
 
   componentDidMount() {
 
-    console.log('document directory',Expo.FileSystem.documentDirectory);
+    console.log('document directory', Expo.FileSystem.documentDirectory);
   }
 
 
-  _pickDocument = async () => {
+  _selectDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
     alert(result.uri);
 
     this.setState(
       {
         document: result
-      }, () => console.log('document directory',Expo.FileSystem.documentDirectory + 'DocumentPicker/' )
+      }, () => console.log('document directory', Expo.FileSystem.documentDirectory + 'DocumentPicker/')
     );
 
 
@@ -112,18 +114,19 @@ export default class HomeScreen extends React.Component {
       //Handle unsuccessful uploads
     }, function () {
       //handle successful oploads on complete
-      uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+      uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
         console.log('File available at', downloadURL);
       });
-    
     })
-
     // const blah = Expo.FileSystem.cacheDirectory;
     // const newFile = new File(this.state.document, "textText.txt");
 
     // const response = await fetch(fileUri);
     // const blob = await response.blob();
+  }
 
+  _scanQR = () => {
+    console.log("scan QR");
   }
 
 
@@ -136,23 +139,43 @@ export default class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         <View>
+          <Image source={locktonLogo} style={{ marginTop: 30, }} />
+        </View>
+        <View style={{ marginTop: 100}}>
+
           <Button
             title="Select Document"
-            onPress={this._pickDocument}
+            onPress={this._selectDocument}
+
           />
           {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
           {this.state.document ? <Text> file size: {this.state.document.size}b </Text> : null}
           {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
+          <View style={{ width: 150, marginTop: 100, }}
+          >
+            <Button
+              title="Scan QR"
+              onPress={this._scanQR}
+            />
+          </View>
+        </View>
+        <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
+          <View style={{flexDirection:"row", alignContent:"flex-end"}}>
+            <Text style={{fontSize:7, color: "black", margin: 1, alignSelf:"center"}}>Secured by
+          </Text>
+            <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
+          </View>
         </View>
 
-        <View style={{ 'marginTop': 20 }}>
+        {/* <View style={{ 'marginTop': 20 }}>
           <Button
             title="Select Image"
             onPress={this._pickImage}
           />
           {image &&
             <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
-        </View>
+        </View> */}
+
       </View>
     );
   }
@@ -163,7 +186,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+    // justifyContent: 'center',
   },
 });
 
