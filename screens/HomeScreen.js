@@ -153,10 +153,10 @@ export default class HomeScreen extends React.Component {
           {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
           <View style={{ width: 150, marginTop: 100, }}
           >
-            <Button
+            {/* <Button
               title="Scan QR"
               onPress={this._scanQR}
-            />
+            /> */}
           </View>
         </View>
         <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
