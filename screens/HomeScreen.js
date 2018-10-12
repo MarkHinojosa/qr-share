@@ -160,7 +160,7 @@ export default class HomeScreen extends React.Component {
           </View>
         </View>
         <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
-          <View style={{flexDirection:"row", alignContent:"flex-end"}}>
+          <View style={{flexDirection:"row", alignContent:"flex-end", margin: 2}}>
             <Text style={{fontSize:7, color: "black", margin: 1, alignSelf:"center"}}>Secured by
           </Text>
             <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
