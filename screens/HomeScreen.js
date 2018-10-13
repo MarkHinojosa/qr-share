@@ -18,6 +18,7 @@ import firebase from 'firebase';
 import Firebase from '../constants/Firebase';
 import locktonLogo from '../assets/images/locktonLogo.png';
 import hercLogo from '../assets/images/hercLogo.png';
+import QRCode from 'react-native-qrcode';
 
 // service firebase.storage {
 //   match /b/{bucket}/o {
@@ -48,7 +49,8 @@ import hercLogo from '../assets/images/hercLogo.png';
 export default class HomeScreen extends React.Component {
   state = {
     image: null,
-    document: null
+    document: null,
+    downloadURL: null
   };
 
 
@@ -107,6 +109,7 @@ export default class HomeScreen extends React.Component {
 
     var message = 'This is my message.';
     var uploadTask = testTextDocRef.putString(message);
+    var booger = this;
 
     uploadTask.on('state_changed', function (snapshot) {
       //onserve state change events such as progress, pause, and resume
@@ -115,9 +118,15 @@ export default class HomeScreen extends React.Component {
     }, function () {
       //handle successful oploads on complete
       uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-        console.log('File available at', downloadURL);
+        // console.log('File available at', downloadURL),
+        booger.setState({ downloadURL }, () => console.log(booger.state))
       });
     })
+
+
+
+
+
     // const blah = Expo.FileSystem.cacheDirectory;
     // const newFile = new File(this.state.document, "textText.txt");
 
@@ -141,7 +150,7 @@ export default class HomeScreen extends React.Component {
         <View>
           <Image source={locktonLogo} style={{ marginTop: 30, }} />
         </View>
-        <View style={{ marginTop: 100}}>
+        <View style={{ marginTop: 100 }}>
 
           <Button
             title="Select Document"
@@ -151,17 +160,22 @@ export default class HomeScreen extends React.Component {
           {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
           {this.state.document ? <Text> file size: {this.state.document.size}b </Text> : null}
           {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
-          <View style={{ width: 150, marginTop: 100, }}
-          >
-            {/* <Button
-              title="Scan QR"
-              onPress={this._scanQR}
-            /> */}
+
+          <View style={{ width: 150, marginTop: "10%", alignContent: "center", alignItems: "center" }}>
+
+            {this.state.downloadURL ? <QRCode
+              value={this.state.downloadURL}
+              size={140}
+              bgColor='black'
+              fgColor='white'
+              /> : null}
+
+
           </View>
         </View>
         <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
-          <View style={{flexDirection:"row", alignContent:"flex-end", margin: 2}}>
-            <Text style={{fontSize:7, color: "black", margin: 1, alignSelf:"center"}}>Secured by
+          <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
+            <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
           </Text>
             <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
           </View>

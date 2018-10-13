@@ -1,6 +1,8 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View, Text, Button } from 'react-native';
-import { Constants, BarCodeScanner, Permissions, FileSystem } from "expo";
+import { Constants, BarCodeScanner, Permissions, FileSystem, WebBrowser } from "expo";
+
+
 export default class LinksScreen extends React.Component {
     constructor(props) {
         super(props);
@@ -37,15 +39,19 @@ export default class LinksScreen extends React.Component {
     _downloadFromURL = remoteUrl => {
         console.log("running download from url")
         FileSystem.downloadAsync(
-            'https://firebasestorage.googleapis.com/v0/b/doc-qr-share.appspot.com/o/documents%2FtestText.txt?alt=media&token=3b2d8653-79f6-4f36-afed-2aa69de2b597',
-            FileSystem.documentDirectory + 'thisIsAFolder' + 'testText.txt'
+            'http://techslides.com/demos/sample-videos/small.mp4',
+            FileSystem.documentDirectory + 'sample-video/' + 'small.mp4'
         )
             .then(({ uri }) => {
-                console.log('Finished downloading to ', uri);
+                // let direct = FileSystem.documentDirectory + 'sample-video/';
+                // console.log('Finished downloading to ', uri);
+                Expo.FileSystem.getInfoAsync(uri, contents)
             })
             .catch(error => {
                 console.error(error);
             });
+
+        // WebBrowser.openBrowserAsync('gs://doc-qr-share.appspot.com/documents/testText.txt')
     }
 
     render() {
@@ -62,13 +68,13 @@ export default class LinksScreen extends React.Component {
                             />
                         )} */}
                 <Button
-          onPress={() => {
-            this._handleBarCodeRead();
-          }}
-          title="click to simulate scan"
-          color="#841584"
-          accessibilityLabel="click to simulate scan"
-        />
+                    onPress={() => {
+                        this._handleBarCodeRead();
+                    }}
+                    title="click to simulate scan"
+                    color="#841584"
+                    accessibilityLabel="click to simulate scan"
+                />
             </View>
         );
     }
