@@ -62,7 +62,7 @@ export default class HomeScreen extends React.Component {
 
   _selectDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
-    alert(result.uri);
+    alert("file path: " + result.uri);
 
     this.setState(
       {
@@ -85,7 +85,7 @@ export default class HomeScreen extends React.Component {
       aspect: [4, 3],
     });
 
-    alert(result.uri);
+    alert("file path: ", result.uri);
     console.log(result)
 
     if (!result.cancelled) {
@@ -109,7 +109,7 @@ export default class HomeScreen extends React.Component {
 
     var message = 'This is my message.';
     var uploadTask = testTextDocRef.putString(message);
-    var booger = this;
+    var bindedThis = this;
 
     uploadTask.on('state_changed', function (snapshot) {
       //onserve state change events such as progress, pause, and resume
@@ -119,7 +119,7 @@ export default class HomeScreen extends React.Component {
       //handle successful oploads on complete
       uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
         // console.log('File available at', downloadURL),
-        booger.setState({ downloadURL }, () => console.log(booger.state))
+        bindedThis.setState({ downloadURL }, () => console.log(bindedThis.state))
       });
     })
 
