@@ -8,7 +8,7 @@ export default class LinksScreen extends React.Component {
         super(props);
         this.state = {
             hasCameraPermission: null,
-            url: ""
+            result: ""
         };
     }
     componentDidMount() {
@@ -27,37 +27,36 @@ export default class LinksScreen extends React.Component {
 
     _handleBarCodeRead = payload => {
         console.log("read QR")
-        // const scanResult = payload.data;
-        // this.setState(
-        //     {
-        //         url: scanResult
-        //     }, () => this._downloadFromURL()
-        // )
-        this._downloadFromURL()
+        const scanResult = payload.data;
+        this.setState(
+            {
+                result: scanResult
+            }, () => this._downloadFromURL()
+        )
     };
 
-    _downloadFromURL = remoteUrl => {
+    _downloadFromURL = async (remoteUrl) => {
         console.log("running download from url")
-        FileSystem.downloadAsync(
-            'http://techslides.com/demos/sample-videos/small.mp4',
-            FileSystem.documentDirectory + 'sample-video/' + 'small.mp4'
-        )
-            .then(({ uri }) => {
-                // let direct = FileSystem.documentDirectory + 'sample-video/';
-                // console.log('Finished downloading to ', uri);
-                Expo.FileSystem.getInfoAsync(uri, contents)
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        // FileSystem.downloadAsync(
+        //     'http://techslides.com/demos/sample-videos/small.mp4',
+        //     FileSystem.documentDirectory + 'sample-video/' + 'small.mp4'
+        // )
+        //     .then(({ uri }) => {
+        //         // let direct = FileSystem.documentDirectory + 'sample-video/';
+        //         // console.log('Finished downloading to ', uri);
+        //         Expo.FileSystem.getInfoAsync(uri, contents)
+        //     })
+        //     .catch(error => {
+        //         console.error(error);
+        //     });
 
-        // WebBrowser.openBrowserAsync('gs://doc-qr-share.appspot.com/documents/testText.txt')
+        WebBrowser.openBrowserAsync(this.state.result)
     }
 
     render() {
         return (
             <View style={styles.container}>
-                {/* {this.state.hasCameraPermission === null ? (
+                {this.state.hasCameraPermission === null ? (
                     <Text>Requesting for camera permission</Text>
                 ) : this.state.hasCameraPermission === false ? (
                     <Text>Camera permission is not granted</Text>
@@ -66,15 +65,17 @@ export default class LinksScreen extends React.Component {
                                 onBarCodeRead={this._handleBarCodeRead}
                                 style={{ height: 200, width: 200 }}
                             />
-                        )} */}
-                <Button
+                        )}
+                {/* <Button
                     onPress={() => {
                         this._handleBarCodeRead();
                     }}
                     title="click to simulate scan"
                     color="#841584"
                     accessibilityLabel="click to simulate scan"
-                />
+                /> */}
+
+                <Text>{this.state.result && JSON.stringify(this.state.result)}</Text>
             </View>
         );
     }
