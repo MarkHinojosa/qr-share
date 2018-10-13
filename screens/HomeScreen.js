@@ -155,21 +155,21 @@ export default class HomeScreen extends React.Component {
           <Button
             title="Select Document"
             onPress={this._selectDocument}
-
           />
+
           {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
           {this.state.document ? <Text> file size: {this.state.document.size}b </Text> : null}
           {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
 
           <View style={{ width: 150, marginTop: "10%", alignContent: "center", alignItems: "center" }}>
 
-            {this.state.downloadURL ? <QRCode
-              value={this.state.downloadURL}
-              size={140}
-              bgColor='black'
-              fgColor='white'
+            {this.state.downloadURL ?
+              <QRCode
+                value={this.state.downloadURL}
+                size={140}
+                bgColor='black'
+                fgColor='white'
               /> : null}
-
 
           </View>
         </View>
