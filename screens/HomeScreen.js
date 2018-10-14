@@ -7,10 +7,11 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Button
+  Button,
+  CameraRoll,
 } from 'react-native';
 import { WebBrowser } from 'expo';
-import { DocumentPicker, ImagePicker } from 'expo';
+import { DocumentPicker, ImagePicker, takeSnapshotAsync, Permissions } from 'expo';
 
 import { MonoText } from '../components/StyledText';
 
@@ -47,18 +48,38 @@ import QRCode from 'react-native-qrcode';
 // testTextDocumentsRef.fullPath === testTextDocumentsRef.fullPath    // false
 
 export default class HomeScreen extends React.Component {
+
+  static navigationOptions = {
+    header: null,
+  };
+
   state = {
     image: null,
     document: null,
-    downloadURL: null
+    downloadURL: null,
+    cameraRollUri: null
   };
 
 
   componentDidMount() {
-
+    this.getCameraPermission();
     console.log('document directory', Expo.FileSystem.documentDirectory);
   }
 
+  async getCameraPermission() {
+    const { status: existingStatus } = await Permissions.getAsync(Permissions.CAMERA_ROLL);
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      return
+    } else if (finalStatus === 'granted') {
+      
+    }
+  }
 
   _selectDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
@@ -101,15 +122,24 @@ export default class HomeScreen extends React.Component {
     let storageRef = firebase.storage().ref();
     let testTextRef = storageRef.child(docName);
     let testTextDocRef = storageRef.child('documents/' + docName);
-    let file = "..."; //use blob or file API
+    var bindedThis = this;
+    let fileUri = this.state.document.uri;
 
-    // ref.put(file).then(function (snapshot) {
-    //   console.log('uploaded a blog or file!');
-    // })
+    console.log("file uri" + fileUri);
+
+    //****this is where the file needs to be converted and push to storage */
+
+    // const blah = Expo.FileSystem.cacheDirectory;
+    // const newFile = new File(this.state.document, "textText.txt");
+    // const response = await fetch(fileUri);
+    // let file = "..."; //use blob or file API
+
+    // var uploadTask = testTextDocRef.put(file);
+
+    //****this is the false push to storage***
 
     var message = 'This is my message.';
     var uploadTask = testTextDocRef.putString(message);
-    var bindedThis = this;
 
     uploadTask.on('state_changed', function (snapshot) {
       //onserve state change events such as progress, pause, and resume
@@ -122,25 +152,42 @@ export default class HomeScreen extends React.Component {
         bindedThis.setState({ downloadURL }, () => console.log(bindedThis.state))
       });
     })
-
-
-
-
-
-    // const blah = Expo.FileSystem.cacheDirectory;
-    // const newFile = new File(this.state.document, "textText.txt");
-
-    // const response = await fetch(fileUri);
-    // const blob = await response.blob();
-  }
-
-  _scanQR = () => {
-    console.log("scan QR");
   }
 
 
-  static navigationOptions = {
-    header: null,
+  _saveToCameraRollAsync = async () => {
+
+
+    let result = await takeSnapshotAsync(this._container, {
+      format: 'png',
+      result: 'file',
+    });
+
+    let saveResult = await CameraRoll.saveToCameraRoll(result, 'photo');
+    this.setState({ cameraRollUri: saveResult }, () => console.log(this.state));
+
+    // const result = await takeSnapshotAsync(this.pageView, {
+    //   result: 'file',
+    //   height: 1080,
+    //   width: 1080,
+    //   quality: 1,
+    //   format: 'png',
+    // });
+
+    // const rslt = await takeSnapshotAsync(this.pageView, {
+    //   result: 'file',
+    //   height: 1080,
+    //   width: 1080,
+    //   quality: 1,
+    //   format: 'png',
+    // }).then(
+    //   screenshotURI => console.log("screen shot saved to ", screenshotURI),
+    //   error => console.error("oops, snapshot failed", error) 
+    // )
+    //   return rslt
+
+    // let saveResult = await CameraRoll.saveToCameraRoll(rslt, 'base64');
+    // this.setState({ cameraRollUri: saveResult });
   };
 
   render() {
@@ -150,7 +197,7 @@ export default class HomeScreen extends React.Component {
         <View>
           <Image source={locktonLogo} style={{ marginTop: 30, }} />
         </View>
-        <View style={{ marginTop: 100 }}>
+        <View style={{ marginTop: 50 }}>
 
           <Button
             title="Select Document"
@@ -161,36 +208,31 @@ export default class HomeScreen extends React.Component {
           {this.state.document ? <Text> file size: {this.state.document.size}b </Text> : null}
           {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
 
-          <View style={{ width: 150, marginTop: "10%", alignContent: "center", alignItems: "center" }}>
+          <View collapsable={false} style={{ width: 150, marginTop: "10%", marginBottom: "10%", alignContent: "center", alignItems: "center" }}
+           ref = { view => { this._container = view; }} >
+          {this.state.downloadURL ?
 
-            {this.state.downloadURL ?
-              <QRCode
-                value={this.state.downloadURL}
-                size={140}
-                bgColor='black'
-                fgColor='white'
-              /> : null}
 
-          </View>
-        </View>
-        <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
-          <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
-            <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
-          </Text>
-            <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
-          </View>
+            <QRCode
+              value={this.state.downloadURL}
+              size={140}
+              bgColor='black'
+              fgColor='white'
+            /> : null}
+
         </View>
 
-        {/* <View style={{ 'marginTop': 20 }}>
-          <Button
-            title="Select Image"
-            onPress={this._pickImage}
-          />
-          {image &&
-            <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
-        </View> */}
+        {this.state.downloadURL ? <Button style={{marginTop: 10 }} title="save QR" onPress={this._saveToCameraRollAsync} /> : null}
 
       </View>
+      <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
+        <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
+          <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
+          </Text>
+          <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
+        </View>
+      </View>
+      </View >
     );
   }
 }
@@ -204,6 +246,4 @@ const styles = StyleSheet.create({
   },
 });
 
-
-//firebase stuff
 
