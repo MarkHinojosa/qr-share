@@ -27,6 +27,7 @@ export default class HomeScreen extends React.Component {
   };
 
   state = {
+    hasCameraRollPermission: null,
     image: null,
     document: null,
     downloadURL: null,
@@ -36,33 +37,60 @@ export default class HomeScreen extends React.Component {
   };
 
 
-  componentDidMount() {
-    // console.log('document directory', Expo.FileSystem.documentDirectory);
+
+  async componentDidMount() {
+    await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    await Permissions.askAsync(Permissions.CAMERA);
   }
 
+  _requestCameraRollPermission = async () => {
+
+    const { Permissions } = Expo;
+    const { status } = await Permissions.getAsync(Permissions.CAMERA_ROLL);
+
+
+    // const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    this.setState({
+      hasCameraRollPermission: status === "granted"
+    });
+  };
 
   _selectDocument = async () => {
-    let result = await DocumentPicker.getDocumentAsync({});
+    console.log('cache directory', Expo.FileSystem)
+    let result = await DocumentPicker.getDocumentAsync({
+      // copyToCacheDirectory: true
+    });
     alert("file path: " + result.uri);
 
     this.setState(
       {
         document: result
-      }, () => console.log('document directory', Expo.FileSystem.documentDirectory + 'DocumentPicker/')
+      }, () => this._setDetails()
     )
 
-    if (this.state.document.size) {
+    let fileUri = result.uri;
+
+    let contents = Expo.FileSystem.readAsStringAsync(fileUri).then(res => 
+      this._contents(res)
+      );
+  }
+
+  _contents = (cont) => {
+    this.setState({ contents: cont });
+  }
+
+  _setDetails = () => {
+    if (this.state.document) {
+      console.log("making it here")
       let docSizeBytes = this.state.document.size;
       let docSizeKilobytes = docSizeBytes * .001;
       let docSizeKB2Decimals = docSizeKilobytes.toFixed(2);
       this.setState({ docSizekb: docSizeKB2Decimals });
       let calculatedCost = (docSizeKB2Decimals * .001) / .4;
-      console.log(calculatedCost)
-      this.setState({ cost: calculatedCost })
+      let calculatedCost2Fixed = calculatedCost.toFixed(7);
+      this.setState({ cost: calculatedCost2Fixed })
     }
   }
-
-
   _pickImage = async () => {
     const Blob = RNFetchBlob.polyfill.Blob;
     const fs = RNFetchBlob.fs;
@@ -90,23 +118,16 @@ export default class HomeScreen extends React.Component {
     let testTextRef = storageRef.child(docName);
     let testTextDocRef = storageRef.child('documents/' + docName);
     var bindedThis = this;
-    let fileUri = this.state.document.uri;
-
-    console.log("file uri" + fileUri);
 
     //****this is where the file needs to be converted and push to storage */
 
-    // const blah = Expo.FileSystem.cacheDirectory;
-    // const newFile = new File(this.state.document, "textText.txt");
-    // const response = await fetch(fileUri);
-    // let file = "..."; //use blob or file API
+    const newFile = new File([this.state.contents], "testText.txt");
 
-    // var uploadTask = testTextDocRef.put(file);
+    var uploadTask = testTextDocRef.put(newFile);
 
     //****this is the false push to storage***
-
-    var message = 'This is my message.';
-    var uploadTask = testTextDocRef.putString(message);
+    // var message = 'This is my message.';
+    // var uploadTask = testTextDocRef.putString(message);
 
     uploadTask.on('state_changed', function (snapshot) {
       //onserve state change events such as progress, pause, and resume
@@ -125,6 +146,8 @@ export default class HomeScreen extends React.Component {
     let currentPrice = this.state.cost;
     let newWallet = currentWallet - currentPrice;
     this.setState({ wallet: newWallet })
+
+
   }
 
   _saveToCameraRollAsync = async () => {
@@ -163,11 +186,20 @@ export default class HomeScreen extends React.Component {
 
   render() {
     let { image } = this.state;
+
+
     return (
       <View
-
         style={styles.container}
       >
+
+        {this.state.hasCameraRollPermission === null ? (
+          <Text>Requesting for camera permission</Text>
+        ) : this.state.hasCameraPermission === false ? (
+          <Text>Camera permission is not granted</Text>
+        ) : (
+              <Text>line 186</Text>
+            )}
         <View>
           <Image source={locktonLogo} style={{ marginTop: 50, }} />
         </View>
@@ -177,7 +209,7 @@ export default class HomeScreen extends React.Component {
             title="Select Document"
             onPress={this._selectDocument}
           />
-          <View style={{marginBottom: 5}}>
+          <View style={{ marginBottom: 5 }}>
             {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
             {this.state.document ? <Text> file size: {this.state.docSizekb} kB </Text> : null}
             {this.state.cost ? <Text> upload cost: {this.state.cost} Hercs </Text> : null}
@@ -196,7 +228,7 @@ export default class HomeScreen extends React.Component {
                   fgColor='white'
                 /> : null}
 
-              {this.state.downloadURL ? <Text style={{color: "white"}}> {this.state.document.name} </Text> : null}
+              {this.state.downloadURL ? <Text style={{ color: "white" }}> {this.state.document.name} </Text> : null}
             </View>
 
             {this.state.downloadURL ? <Button title="Save QR" onPress={this._saveToCameraRollAsync} /> : null}
