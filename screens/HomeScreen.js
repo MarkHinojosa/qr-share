@@ -11,41 +11,14 @@ import {
   CameraRoll,
 } from 'react-native';
 import { WebBrowser } from 'expo';
-import { DocumentPicker, ImagePicker, takeSnapshotAsync, Permissions } from 'expo';
-
-import { MonoText } from '../components/StyledText';
-
+import { DocumentPicker, ImagePicker, takeSnapshotAsync } from 'expo';
 import firebase from 'firebase';
 import Firebase from '../constants/Firebase';
 import locktonLogo from '../assets/images/locktonLogo.png';
 import hercLogo from '../assets/images/hercLogo.png';
 import QRCode from 'react-native-qrcode';
 
-// service firebase.storage {
-//   match /b/{bucket}/o {
-//     match /{allPaths=**} {
-//       allow read, write: if request.auth != null;
-//     }
-//   }
-// }
-
-// var app = firebase.initializeApp(myFirebase);
-
-
-
-// Create a reference to 'mountains.jpg'
-// var mountainsRef = storageRef.child('testText.txt');
-// var testTextRef = storageRef.child('testText.txt');
-
-// Create a reference to 'images/mountains.jpg'
-// var mountainImagesRef = storageRef.child('images/mountains.jpg');
-// var testTextDocumentsRef = storageRef.child('documents/testText.txt');
-
-// While the file names are the same, the references point to different files
-// mountainsRef.name === mountainImagesRef.name            // true
-// mountainsRef.fullPath === mountainImagesRef.fullPath    // false
-// testTextRef.name === testTextRef.name             // true
-// testTextDocumentsRef.fullPath === testTextDocumentsRef.fullPath    // false
+console.disableYellowBox = true;
 
 export default class HomeScreen extends React.Component {
 
@@ -57,29 +30,16 @@ export default class HomeScreen extends React.Component {
     image: null,
     document: null,
     downloadURL: null,
-    cameraRollUri: null
+    wallet: 10,
+    cost: null,
+    docSizekb: null
   };
 
 
   componentDidMount() {
-    this.getCameraPermission();
-    console.log('document directory', Expo.FileSystem.documentDirectory);
+    // console.log('document directory', Expo.FileSystem.documentDirectory);
   }
 
-  async getCameraPermission() {
-    const { status: existingStatus } = await Permissions.getAsync(Permissions.CAMERA_ROLL);
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      return
-    } else if (finalStatus === 'granted') {
-      
-    }
-  }
 
   _selectDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({});
@@ -89,11 +49,19 @@ export default class HomeScreen extends React.Component {
       {
         document: result
       }, () => console.log('document directory', Expo.FileSystem.documentDirectory + 'DocumentPicker/')
-    );
+    )
 
-
-
+    if (this.state.document.size) {
+      let docSizeBytes = this.state.document.size;
+      let docSizeKilobytes = docSizeBytes * .001;
+      let docSizeKB2Decimals = docSizeKilobytes.toFixed(2);
+      this.setState({ docSizekb: docSizeKB2Decimals });
+      let calculatedCost = (docSizeKB2Decimals * .001) / .4;
+      console.log(calculatedCost)
+      this.setState({ cost: calculatedCost })
+    }
   }
+
 
   _pickImage = async () => {
     const Blob = RNFetchBlob.polyfill.Blob;
@@ -113,7 +81,6 @@ export default class HomeScreen extends React.Component {
       this.setState({ image: result.uri });
     }
   };
-
 
   _uploadFile = () => {
     const doc = this.state.document;
@@ -148,15 +115,19 @@ export default class HomeScreen extends React.Component {
     }, function () {
       //handle successful oploads on complete
       uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-        // console.log('File available at', downloadURL),
-        bindedThis.setState({ downloadURL }, () => console.log(bindedThis.state))
-      });
+        bindedThis.setState({ downloadURL }, () => bindedThis._updateWallet())
+      })
     })
   }
 
+  _updateWallet = () => {
+    let currentWallet = this.state.wallet;
+    let currentPrice = this.state.cost;
+    let newWallet = currentWallet - currentPrice;
+    this.setState({ wallet: newWallet })
+  }
 
   _saveToCameraRollAsync = async () => {
-
 
     let result = await takeSnapshotAsync(this._container, {
       format: 'png',
@@ -164,7 +135,7 @@ export default class HomeScreen extends React.Component {
     });
 
     let saveResult = await CameraRoll.saveToCameraRoll(result, 'photo');
-    this.setState({ cameraRollUri: saveResult }, () => console.log(this.state));
+    this.setState({ cameraRollUri: saveResult });
 
     // const result = await takeSnapshotAsync(this.pageView, {
     //   result: 'file',
@@ -193,46 +164,60 @@ export default class HomeScreen extends React.Component {
   render() {
     let { image } = this.state;
     return (
-      <View style={styles.container}>
+      <View
+
+        style={styles.container}
+      >
         <View>
-          <Image source={locktonLogo} style={{ marginTop: 30, }} />
+          <Image source={locktonLogo} style={{ marginTop: 50, }} />
         </View>
-        <View style={{ marginTop: 50 }}>
+        <View style={{ marginTop: 50, alignContent: "center", alignItems: "center" }}>
 
           <Button
             title="Select Document"
             onPress={this._selectDocument}
           />
+          <View style={{marginBottom: 5}}>
+            {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
+            {this.state.document ? <Text> file size: {this.state.docSizekb} kB </Text> : null}
+            {this.state.cost ? <Text> upload cost: {this.state.cost} Hercs </Text> : null}
+            {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
+          </View>
 
-          {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
-          {this.state.document ? <Text> file size: {this.state.document.size}b </Text> : null}
-          {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
+          <View style={{ width: 150, marginTop: "5%", alignContent: "center", alignItems: "center" }}>
+            <View style={{ flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center" }} collapsable={false} ref={view => {
+              this._container = view;
+            }}>
+              {this.state.downloadURL ?
+                <QRCode
+                  value={this.state.downloadURL}
+                  size={140}
+                  bgColor='black'
+                  fgColor='white'
+                /> : null}
 
-          <View collapsable={false} style={{ width: 150, marginTop: "10%", marginBottom: "10%", alignContent: "center", alignItems: "center" }}
-           ref = { view => { this._container = view; }} >
-          {this.state.downloadURL ?
+              {this.state.downloadURL ? <Text style={{color: "white"}}> {this.state.document.name} </Text> : null}
+            </View>
 
+            {this.state.downloadURL ? <Button title="Save QR" onPress={this._saveToCameraRollAsync} /> : null}
 
-            <QRCode
-              value={this.state.downloadURL}
-              size={140}
-              bgColor='black'
-              fgColor='white'
-            /> : null}
-
+          </View>
         </View>
+        <View style={{ width: "100%", flex: 1, justifyContent: "space-between", flexDirection: "row", alignItems: "flex-end" }}>
 
-        {this.state.downloadURL ? <Button style={{marginTop: 10 }} title="save QR" onPress={this._saveToCameraRollAsync} /> : null}
+          <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
+            <Text style={{ fontSize: 12, color: "black", margin: 1, marginBottom: 20, alignSelf: "center" }}>Wallet: {this.state.wallet} Hercs
+            </Text>
+          </View>
 
-      </View>
-      <View style={{ width: "100%", flex: 1, justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
-        <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
-          <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
+          <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
+            <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
           </Text>
-          <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
+            <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
+          </View>
+
         </View>
       </View>
-      </View >
     );
   }
 }
@@ -245,5 +230,3 @@ const styles = StyleSheet.create({
     // justifyContent: 'center',
   },
 });
-
-
