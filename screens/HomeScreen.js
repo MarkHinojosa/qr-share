@@ -9,6 +9,7 @@ import {
   View,
   Button,
   CameraRoll,
+  PixelRatio
 } from 'react-native';
 import { WebBrowser } from 'expo';
 import { DocumentPicker, ImagePicker, takeSnapshotAsync } from 'expo';
@@ -39,8 +40,8 @@ export default class HomeScreen extends React.Component {
 
 
   async componentDidMount() {
-    await Permissions.askAsync(Permissions.CAMERA_ROLL);
-    await Permissions.askAsync(Permissions.CAMERA);
+    // await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    // await Permissions.askAsync(Permissions.CAMERA);
   }
 
   _requestCameraRollPermission = async () => {
@@ -70,9 +71,9 @@ export default class HomeScreen extends React.Component {
 
     let fileUri = result.uri;
 
-    let contents = Expo.FileSystem.readAsStringAsync(fileUri).then(res => 
+    let contents = Expo.FileSystem.readAsStringAsync(fileUri).then(res =>
       this._contents(res)
-      );
+    );
   }
 
   _contents = (cont) => {
@@ -121,7 +122,7 @@ export default class HomeScreen extends React.Component {
 
     //****this is where the file needs to be converted and push to storage */
 
-    const newFile = new File([this.state.contents], "testText.txt");
+    const newFile = new File([this.state.contents], docName);
 
     var uploadTask = testTextDocRef.put(newFile);
 
@@ -146,64 +147,37 @@ export default class HomeScreen extends React.Component {
     let currentPrice = this.state.cost;
     let newWallet = currentWallet - currentPrice;
     this.setState({ wallet: newWallet })
-
-
   }
 
   _saveToCameraRollAsync = async () => {
-
-    let result = await takeSnapshotAsync(this._container, {
-      format: 'png',
+    const targetPixelCount = 1080; // If you want full HD pictures
+    const pixelRatio = PixelRatio.get(); // The pixel ratio of the device
+    // pixels * pixelratio = targetPixelCount, so pixels = targetPixelCount / pixelRatio
+    const pixels = targetPixelCount / pixelRatio;
+    const result = await takeSnapshotAsync(this._container, {
       result: 'file',
+      height: 120,
+      width: 120,
+      quality: 1,
+      format: 'jpg',
     });
 
     let saveResult = await CameraRoll.saveToCameraRoll(result, 'photo');
-    this.setState({ cameraRollUri: saveResult });
-
-    // const result = await takeSnapshotAsync(this.pageView, {
-    //   result: 'file',
-    //   height: 1080,
-    //   width: 1080,
-    //   quality: 1,
-    //   format: 'png',
-    // });
-
-    // const rslt = await takeSnapshotAsync(this.pageView, {
-    //   result: 'file',
-    //   height: 1080,
-    //   width: 1080,
-    //   quality: 1,
-    //   format: 'png',
-    // }).then(
-    //   screenshotURI => console.log("screen shot saved to ", screenshotURI),
-    //   error => console.error("oops, snapshot failed", error) 
-    // )
-    //   return rslt
-
-    // let saveResult = await CameraRoll.saveToCameraRoll(rslt, 'base64');
-    // this.setState({ cameraRollUri: saveResult });
+    this.setState({ cameraRollUri: saveResult }, alert("saved to " + saveResult));
   };
 
   render() {
     let { image } = this.state;
-
 
     return (
       <View
         style={styles.container}
       >
 
-        {this.state.hasCameraRollPermission === null ? (
-          <Text>Requesting for camera permission</Text>
-        ) : this.state.hasCameraPermission === false ? (
-          <Text>Camera permission is not granted</Text>
-        ) : (
-              <Text>line 186</Text>
-            )}
         <View>
           <Image source={locktonLogo} style={{ marginTop: 50, }} />
         </View>
-        <View style={{ marginTop: 50, alignContent: "center", alignItems: "center" }}>
+        <View style={{ marginTop: "10%", alignContent: "center", alignItems: "center" }}>
 
           <Button
             title="Select Document"
@@ -216,19 +190,19 @@ export default class HomeScreen extends React.Component {
             {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
           </View>
 
-          <View style={{ width: 150, marginTop: "5%", alignContent: "center", alignItems: "center" }}>
-            <View style={{ flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center" }} collapsable={false} ref={view => {
+          <View style={{marginTop: "5%", alignContent: "center", alignItems: "center" }}>
+            <View style={{ padding: 10, flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center" }} collapsable={false} ref={view => {
               this._container = view;
             }}>
               {this.state.downloadURL ?
                 <QRCode
                   value={this.state.downloadURL}
-                  size={140}
+                  size={120}
                   bgColor='black'
                   fgColor='white'
                 /> : null}
 
-              {this.state.downloadURL ? <Text style={{ color: "white" }}> {this.state.document.name} </Text> : null}
+              {/* {this.state.downloadURL ? <Text style={{ color: "white" }}> {this.state.document.name} </Text> : null} */}
             </View>
 
             {this.state.downloadURL ? <Button title="Save QR" onPress={this._saveToCameraRollAsync} /> : null}
@@ -236,18 +210,15 @@ export default class HomeScreen extends React.Component {
           </View>
         </View>
         <View style={{ width: "100%", flex: 1, justifyContent: "space-between", flexDirection: "row", alignItems: "flex-end" }}>
-
           <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
-            <Text style={{ fontSize: 12, color: "black", margin: 1, marginBottom: 20, alignSelf: "center" }}>Wallet: {this.state.wallet} Hercs
+            <Text style={{ fontSize: 12, color: "black", margin: 1, marginBottom: "10%", alignSelf: "center" }}>Wallet: {this.state.wallet} Hercs
             </Text>
           </View>
-
           <View style={{ flexDirection: "row", alignContent: "flex-end", margin: 2 }}>
             <Text style={{ fontSize: 7, color: "black", margin: 1, alignSelf: "center" }}>Secured by
           </Text>
             <Image source={hercLogo} style={{ margin: 1, resizeMode: "contain", width: 60, height: 60 }} />
           </View>
-
         </View>
       </View>
     );
@@ -259,6 +230,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    // justifyContent: 'center',
   },
 });
