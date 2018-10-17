@@ -57,10 +57,7 @@ export default class HomeScreen extends React.Component {
   };
 
   _selectDocument = async () => {
-    console.log('cache directory', Expo.FileSystem)
-    let result = await DocumentPicker.getDocumentAsync({
-      // copyToCacheDirectory: true
-    });
+    let result = await DocumentPicker.getDocumentAsync({});
     alert("file path: " + result.uri);
 
     this.setState(
@@ -101,10 +98,7 @@ export default class HomeScreen extends React.Component {
       allowsEditing: true,
       aspect: [4, 3],
     });
-
     alert("file path: ", result.uri);
-    console.log(result)
-
     if (!result.cancelled) {
       this.setState({ image: result.uri });
     }
@@ -113,13 +107,9 @@ export default class HomeScreen extends React.Component {
   _executeUpload = async () => {
     let blah = this.state.document.uri;
     uploadURL = await this._uploadFile(blah);
-    // this.setState({ downloadURL: uploadURL }, () => console.log("state", this.state))
   }
 
   _uploadFile = async (uri) => {
-
-    console.log("in upload file", uri)
-
     const doc = this.state.document;
     let docName = doc.name;
     let filename = this.state.document.name;
@@ -129,43 +119,18 @@ export default class HomeScreen extends React.Component {
     var bindedThis = this;
 
     //****this is where the file needs to be converted and push to storage */
-
-
     const response = await fetch(uri);
     const blob = await response.blob();
     const snapshot = await testTextDocRef.put(blob).then(snapshot => {
       return snapshot.ref.getDownloadURL();
     }).then(downloadURL => {
       // console.log(`Successfully uploaded file and got download link` + downloadURL);
-      bindedThis.setState({ downloadURL }, () => console.log("returning line 140", bindedThis.state))
+      bindedThis.setState({ downloadURL }, () => bindedThis._updateWallet())
       // return downloadURL;
     }).catch(error => {
       // Use to signal error if something goes wrong.
       console.log(`Failed to upload file and get link - ${error}`);
     });
-
-
-    // const newFile = new File([this.state.contents], docName);
-
-    // var uploadTask = testTextDocRef.put(newFile);
-
-    //****this is the false push to storage***
-    // var message = 'This is my message.';
-    // var uploadTask = testTextDocRef.putString(message);
-
-    // snapshot.on('state_changed', function (snapshot) {
-    //   //onserve state change events such as progress, pause, and resume
-    // }, function (error) {
-    //   //Handle unsuccessful uploads
-    // }, function () {
-    //   //handle successful oploads on complete
-    //   uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-    //     bindedThis.setState({ downloadURL }, () => bindedThis._updateWallet())
-    //   })
-    // })
-    // console.log(snapshot.downloadURL);
-    // return snapshot.downloadURL, console.log("returning upload file", snapshot)
-
   }
 
   _updateWallet = () => {
@@ -227,7 +192,7 @@ export default class HomeScreen extends React.Component {
                   fgColor='white'
                 /> : null}
 
-              {/* {this.state.downloadURL ? <Text style={{ color: "white" }}> {this.state.document.name} </Text> : null} */}
+              {this.state.downloadURL ? <Text style={{ color: "white" }}> {this.state.document.name} </Text> : null}
             </View>
 
             {this.state.downloadURL ? <Button title="Save QR" onPress={this._saveToCameraRollAsync} /> : null}
