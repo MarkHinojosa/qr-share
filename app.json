@@ -1,14 +1,17 @@
 {
   "expo": {
-    "name": "doc-qr-share",
+    "name": "Lockton",
     "description": "LOCKTON DEMO",
     "slug": "doc-qr-share",
     "privacy": "public",
     "sdkVersion": "30.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/locktonSquare.png",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -22,6 +25,9 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.herc.locktondemo"
     }
   }
 }

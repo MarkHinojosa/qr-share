@@ -18,6 +18,7 @@ import Firebase from '../constants/Firebase';
 import locktonLogo from '../assets/images/locktonLogo.png';
 import hercLogo from '../assets/images/hercLogo.png';
 import QRCode from 'react-native-qrcode';
+import { __await } from 'tslib';
 
 console.disableYellowBox = true;
 
@@ -48,7 +49,6 @@ export default class HomeScreen extends React.Component {
 
     const { Permissions } = Expo;
     const { status } = await Permissions.getAsync(Permissions.CAMERA_ROLL);
-
 
     // const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
     this.setState({
@@ -82,7 +82,6 @@ export default class HomeScreen extends React.Component {
 
   _setDetails = () => {
     if (this.state.document) {
-      console.log("making it here")
       let docSizeBytes = this.state.document.size;
       let docSizeKilobytes = docSizeBytes * .001;
       let docSizeKB2Decimals = docSizeKilobytes.toFixed(2);
@@ -111,7 +110,16 @@ export default class HomeScreen extends React.Component {
     }
   };
 
-  _uploadFile = () => {
+  _executeUpload = async () => {
+    let blah = this.state.document.uri;
+    uploadURL = await this._uploadFile(blah);
+    // this.setState({ downloadURL: uploadURL }, () => console.log("state", this.state))
+  }
+
+  _uploadFile = async (uri) => {
+
+    console.log("in upload file", uri)
+
     const doc = this.state.document;
     let docName = doc.name;
     let filename = this.state.document.name;
@@ -122,24 +130,42 @@ export default class HomeScreen extends React.Component {
 
     //****this is where the file needs to be converted and push to storage */
 
-    const newFile = new File([this.state.contents], docName);
 
-    var uploadTask = testTextDocRef.put(newFile);
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const snapshot = await testTextDocRef.put(blob).then(snapshot => {
+      return snapshot.ref.getDownloadURL();
+    }).then(downloadURL => {
+      // console.log(`Successfully uploaded file and got download link` + downloadURL);
+      bindedThis.setState({ downloadURL }, () => console.log("returning line 140", bindedThis.state))
+      // return downloadURL;
+    }).catch(error => {
+      // Use to signal error if something goes wrong.
+      console.log(`Failed to upload file and get link - ${error}`);
+    });
+
+
+    // const newFile = new File([this.state.contents], docName);
+
+    // var uploadTask = testTextDocRef.put(newFile);
 
     //****this is the false push to storage***
     // var message = 'This is my message.';
     // var uploadTask = testTextDocRef.putString(message);
 
-    uploadTask.on('state_changed', function (snapshot) {
-      //onserve state change events such as progress, pause, and resume
-    }, function (error) {
-      //Handle unsuccessful uploads
-    }, function () {
-      //handle successful oploads on complete
-      uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-        bindedThis.setState({ downloadURL }, () => bindedThis._updateWallet())
-      })
-    })
+    // snapshot.on('state_changed', function (snapshot) {
+    //   //onserve state change events such as progress, pause, and resume
+    // }, function (error) {
+    //   //Handle unsuccessful uploads
+    // }, function () {
+    //   //handle successful oploads on complete
+    //   uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+    //     bindedThis.setState({ downloadURL }, () => bindedThis._updateWallet())
+    //   })
+    // })
+    // console.log(snapshot.downloadURL);
+    // return snapshot.downloadURL, console.log("returning upload file", snapshot)
+
   }
 
   _updateWallet = () => {
@@ -173,7 +199,6 @@ export default class HomeScreen extends React.Component {
       <View
         style={styles.container}
       >
-
         <View>
           <Image source={locktonLogo} style={{ marginTop: 50, }} />
         </View>
@@ -183,21 +208,21 @@ export default class HomeScreen extends React.Component {
             title="Select Document"
             onPress={this._selectDocument}
           />
-          <View style={{ marginBottom: 5 }}>
-            {this.state.document ? <Text> file name: {this.state.document.name} </Text> : null}
+          <View style={{ marginBottom: 5, alignContent: "center", maxWidth: "70%" }}>
+            {this.state.document ? <Text style={{flexWrap:'wrap'}}> file name: {this.state.document.name} </Text> : null}
             {this.state.document ? <Text> file size: {this.state.docSizekb} kB </Text> : null}
             {this.state.cost ? <Text> upload cost: {this.state.cost} Hercs </Text> : null}
-            {this.state.document ? <Button title="upload" onPress={this._uploadFile} /> : null}
+            {this.state.document ? <Button title="upload" onPress={this._executeUpload} /> : null}
           </View>
 
-          <View style={{marginTop: "5%", alignContent: "center", alignItems: "center" }}>
+          <View style={{ marginTop: "5%", alignContent: "center", alignItems: "center" }}>
             <View style={{ padding: 10, flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center" }} collapsable={false} ref={view => {
               this._container = view;
             }}>
               {this.state.downloadURL ?
                 <QRCode
                   value={this.state.downloadURL}
-                  size={120}
+                  size={150}
                   bgColor='black'
                   fgColor='white'
                 /> : null}
