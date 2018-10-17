@@ -83,8 +83,8 @@ export default class HomeScreen extends React.Component {
       let docSizeKilobytes = docSizeBytes * .001;
       let docSizeKB2Decimals = docSizeKilobytes.toFixed(2);
       this.setState({ docSizekb: docSizeKB2Decimals });
-      let calculatedCost = (docSizeKB2Decimals * .001) / .4;
-      let calculatedCost2Fixed = calculatedCost.toFixed(7);
+      // let calculatedCost = (docSizeKB2Decimals * .001) / .4;
+      let calculatedCost2Fixed =  .00008;
       this.setState({ cost: calculatedCost2Fixed })
     }
   }
